@@ -1,0 +1,1 @@
+from quixstreams import Application
