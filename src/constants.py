@@ -18,7 +18,7 @@ POSTGRES_DB = os.getenv("POSTGRES_DB", "")
 COINMARKETCAP_API_KEY = os.getenv("COINMARKETCAP_API_KEY", "")
 EXHANGE_RATES_API_KEY = os.getenv("EXHANGE_RATES_API_KEY", "")
 
-SYMBOLS = os.getenv("SYMBOLS", "XRP,TRON")
+SYMBOLS = os.getenv("SYMBOLS", "XRP,TRX")
 
 if __name__ == "__main__":
     if not(COINMARKETCAP_API_KEY and EXHANGE_RATES_API_KEY):
