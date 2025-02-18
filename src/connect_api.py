@@ -46,32 +46,15 @@ def exchange_data_check(table_name):
             FROM {table_name}
             ORDER BY date DESC
             LIMIT 1;"""
-    
-    latest_data = read_from_db(table_name,query)
 
-    # save the data into a dataframe
-    latest_df = pd.DataFrame(latest_data)
+    # read_from_db returns data in form of a dataframe
+    latest_df = read_from_db(table_name,query)
 
     # Convert 'date' column to datetime format
     latest_df["date"] = pd.to_datetime(latest_df["date"]).dt.date 
 
     # Compare dates
-    if latest_df["date"].iloc[0] == today_date:
-        #print("The dates match!")
-        return True
-    else:
-        #print(f"The dates do not match. DB date: {latest_df['date'].iloc[0]}, Today's date: {today_date}")
-        return False 
-
-
-def get_data():
-    # get cryptocurrency data from CoinMarketCap API
-    s = Session()
-    data_cmc = make_request_cmc(s)
-
-    # check if exchange rates for today are already stored
-    rates_check = exchange_data_check(table_nm)
-    if rates_check != True:
+    if today_date > latest_df["date"].iloc[0]:   
         # get todays exchange rate data from exchangerates API
         data_exr = make_request_exr(s)
         exchange_list = EXCHANGE_SYMBOLS.split(',')
@@ -83,22 +66,21 @@ def get_data():
 
         remap = remap | {symbol: data_exr.get("rates").get(symbol) for symbol in exchange_list}
     
-        df = pd.DataFrame.from_dict([remap])
-        #print("This is data that we send to database:")
-        #print(df.head())
-
+        latest_df = pd.DataFrame.from_dict([remap])
         # write exchange data into a dedicated table: "exchange_rates"
-        write_to_db(df,table_nm)
+        write_to_db(latest_df,table_nm)
+    return latest_df.iloc[0].to_dict()
 
-    # read data from a table dedicated to exchange rates to get the latest data
-    query = f"""SELECT * 
-            FROM {table_nm}
-            ORDER BY date DESC
-            LIMIT 1;"""
-    
-    data_exchange = read_from_db(table_nm,query)
-    
-    return data_cmc, data_exchange
+
+def get_data():
+    # get cryptocurrency data from CoinMarketCap API
+    s = Session()
+    data_cmc = make_request_cmc(s)
+
+    # check if exchange rates for today are already stored
+    rates_check = exchange_data_check(table_nm)
+   
+    return data_cmc, rates_check
 
 
 if __name__ == "__main__":
