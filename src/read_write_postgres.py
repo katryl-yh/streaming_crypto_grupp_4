@@ -36,7 +36,7 @@ def read_from_db(table_name, sql_query):
 def init_postgres_db():
     # Init query to define tables for storing exchange rates
     query_init = """CREATE TABLE IF NOT EXISTS exchange_rates (
-date DATE PRIMARY KEY,
+date VARCHAR PRIMARY KEY,
 data JSONB
 );"""
 

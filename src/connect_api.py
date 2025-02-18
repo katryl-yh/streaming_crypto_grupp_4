@@ -51,12 +51,13 @@ def exchange_data_check(session, table_name):
     latest_df = read_from_db(table_name, query)
 
     # Convert 'date' column to datetime format
-    latest_df["date"] = pd.to_datetime(latest_df["date"]).dt.date
+    df_temp_date = pd.DataFrame()
+    df_temp_date["date"] = pd.to_datetime(latest_df["date"]).dt.date
 
     # Get today's date
     today_date = datetime.today().date()
 
-    if latest_df.empty or today_date > latest_df["date"].iloc[0]:
+    if latest_df.empty or today_date > df_temp_date["date"].iloc[0]:
         # get todays exchange rate data from exchangerates API
         data_exr = make_request_exr(session)
         exchange_list = EXCHANGE_SYMBOLS.split(",")
