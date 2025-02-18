@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from constants import (
     POSTGRES_USER,
     POSTGRES_PASSWORD,
@@ -29,3 +29,15 @@ def read_from_db(table_name, sql_query):
         sql_query,
         postgres_connection,
     )
+
+def init_postgres_db():
+    # Init query to define tables for storing exchange rates
+    query_init = """CREATE TABLE IF NOT EXISTS exchange_rates (
+date DATE PRIMARY KEY,
+data JSONB
+);"""
+    with postgres_connection.connect() as conn:
+        conn.execute(text(query_init))
+        conn.commit()
+
+init_postgres_db()

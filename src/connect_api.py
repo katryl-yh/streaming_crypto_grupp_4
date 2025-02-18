@@ -37,7 +37,7 @@ def make_request_exr(session):
 
     return response_api.json()
 
-def exchange_data_check(table_name):
+def exchange_data_check(session, table_name):
     # Get today's date
     today_date = datetime.today().date()
 
@@ -53,10 +53,9 @@ def exchange_data_check(table_name):
     # Convert 'date' column to datetime format
     latest_df["date"] = pd.to_datetime(latest_df["date"]).dt.date 
 
-    # Compare dates
-    if today_date > latest_df["date"].iloc[0]:   
+    if latest_df.empty or today_date > latest_df["date"].iloc[0]:   
         # get todays exchange rate data from exchangerates API
-        data_exr = make_request_exr(s)
+        data_exr = make_request_exr(session)
         exchange_list = EXCHANGE_SYMBOLS.split(',')
         # remap the dictionary to store: date + timestamp + base + exchange rate 
         remap = {"date": data_exr.get("date"), 
@@ -71,14 +70,12 @@ def exchange_data_check(table_name):
         write_to_db(latest_df,table_nm)
     return latest_df.iloc[0].to_dict()
 
-
 def get_data():
     # get cryptocurrency data from CoinMarketCap API
     s = Session()
     data_cmc = make_request_cmc(s)
-
     # check if exchange rates for today are already stored
-    rates_check = exchange_data_check(table_nm)
+    rates_check = exchange_data_check(s, table_nm)
    
     return data_cmc, rates_check
 
