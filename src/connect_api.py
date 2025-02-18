@@ -4,6 +4,8 @@ from pprint import pprint
 from read_write_postgres import write_to_db, read_from_db
 import pandas as pd
 from datetime import datetime
+import json
+
 table_nm = "exchange_rates"
 EXCHANGE_BASE = "EUR"
 EXCHANGE_SYMBOLS = "DKK,NOK,SEK"
@@ -37,10 +39,8 @@ def make_request_exr(session):
 
     return response_api.json()
 
-def exchange_data_check(session, table_name):
-    # Get today's date
-    today_date = datetime.today().date()
 
+def exchange_data_check(session, table_name):
     # read data from a table dedicated to exchange rates to get the latest data
     query = f"""SELECT * 
             FROM {table_name}
@@ -48,40 +48,43 @@ def exchange_data_check(session, table_name):
             LIMIT 1;"""
 
     # read_from_db returns data in form of a dataframe
-    latest_df = read_from_db(table_name,query)
+    latest_df = read_from_db(table_name, query)
 
     # Convert 'date' column to datetime format
-    latest_df["date"] = pd.to_datetime(latest_df["date"]).dt.date 
+    latest_df["date"] = pd.to_datetime(latest_df["date"]).dt.date
 
-    if latest_df.empty or today_date > latest_df["date"].iloc[0]:   
+    # Get today's date
+    today_date = datetime.today().date()
+
+    if latest_df.empty or today_date > latest_df["date"].iloc[0]:
         # get todays exchange rate data from exchangerates API
         data_exr = make_request_exr(session)
-        exchange_list = EXCHANGE_SYMBOLS.split(',')
-        # remap the dictionary to store: date + timestamp + base + exchange rate 
-        remap = {"date": data_exr.get("date"), 
-                "timestamp": data_exr.get("timestamp"),
-                "base": data_exr.get("base"),
-                }
+        exchange_list = EXCHANGE_SYMBOLS.split(",")
 
-        remap = remap | {symbol: data_exr.get("rates").get(symbol) for symbol in exchange_list}
-    
-        latest_df = pd.DataFrame.from_dict([remap])
+        # remap the dictionary to store: date + timestamp + base + exchange rate
+        remap = {"base": data_exr.get("base")} | {
+            symbol: data_exr.get("rates").get(symbol) for symbol in exchange_list
+        }
+        data_json = {"date": data_exr.get("date"), "data": json.dumps(remap)}
+        latest_df = pd.DataFrame.from_dict([data_json])
+
         # write exchange data into a dedicated table: "exchange_rates"
-        write_to_db(latest_df,table_nm)
+        write_to_db(latest_df, table_nm)
+
     return latest_df.iloc[0].to_dict()
 
+
 def get_data():
-    # get cryptocurrency data from CoinMarketCap API
     s = Session()
+
+    # get cryptocurrency data from CoinMarketCap API
     data_cmc = make_request_cmc(s)
+
     # check if exchange rates for today are already stored
     rates_check = exchange_data_check(s, table_nm)
-   
+
     return data_cmc, rates_check
 
 
 if __name__ == "__main__":
     pprint(get_data())
-
-    
-
