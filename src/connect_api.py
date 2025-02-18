@@ -81,9 +81,19 @@ def get_data():
     data_cmc = make_request_cmc(s)
 
     # check if exchange rates for today are already stored
-    rates_check = exchange_data_check(s, table_nm)
+    data_rates = exchange_data_check(s, table_nm)
+    data_cmc.pop("status")
+    
+    # remove tags field from data for each coin
+    for key, value in data_cmc["data"].items():
+        value[0].pop("tags")
 
-    return data_cmc, rates_check
+    combined_data = {
+        "coin_data" : data_cmc["data"],
+        "rates_data" : data_rates
+    } 
+
+    return combined_data
 
 
 if __name__ == "__main__":
