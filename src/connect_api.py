@@ -52,7 +52,7 @@ def exchange_data_check(session, table_name):
             LIMIT 1;"""
 
     # read_from_db returns data in form of a dataframe
-    latest_df = read_from_db(table_name, query)
+    latest_df = read_from_db(query)
 
     # convert 'date' column to datetime format
     df_temp_date = pd.DataFrame()
@@ -79,7 +79,7 @@ def exchange_data_check(session, table_name):
         write_to_db(latest_df, table_name)
 
         # ensures returned data is in correct serialized form as stored in the database
-        latest_df = read_from_db(table_name, query)
+        latest_df = read_from_db(query)
 
     return latest_df.iloc[0].to_dict()
 
