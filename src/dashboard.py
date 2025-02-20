@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import plotly.express as px
 from read_write_postgres import read_from_db
@@ -9,11 +10,10 @@ from constants import (
     EXCHANGE_RATE_SYMBOLS,
     )
 options_currency = [EXCHANGE_RATES_BASE] + EXCHANGE_RATE_SYMBOLS.split(',') 
-#print(f"{options_currency=}")
 options_crypto = COINMARKETCAP_SYMBOLS.split(',')
-#print(f"{options_crypto=}")
 
-
+# Auto-refresh every 20 seconds
+count = st_autorefresh(interval=20 * 1000, limit=100, key="data_refresh")
 
 def get_price_data(crypto, fiat):
     query_price = f""" 
@@ -41,7 +41,7 @@ def get_price_data(crypto, fiat):
 def layout():
        
     #Streamlit 
-    st.set_page_config(page_title="Crypto Dashboard", layout="wide")
+    #st.set_page_config(page_title="Crypto Dashboard", layout="wide")
     st.title("📈 Live Cryptocurrency Dashboard")
     col1, col2 = st.columns(2)
 
