@@ -29,10 +29,6 @@ def main():
         while True:
             data = get_data()
             rates_data = data.get("rates_data", {})
-            
-            from pprint import pprint
-            pprint(rates_data)
-            pprint(type(rates_data))
 
             for crypto_symbol, crypto_data in data.get("coin_data").items():
                 data_remap = {
