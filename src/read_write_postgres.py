@@ -26,7 +26,7 @@ def write_to_db(dataframe, table_name):
 
 
 # read function from postgres, TO DO: add error handling later to know if we succeded
-def read_from_db(table_name, sql_query):
+def read_from_db(sql_query):
     return pd.read_sql(
         sql_query,
         postgres_connection,
