@@ -55,6 +55,24 @@ def get_market_cap_data(crypto,fiat):
     # print(df_mcap)
     return df_mcap
 
+def get_volume_data(crypto,fiat):
+    query_volume = f""" 
+    ALTER TABLE crypto_data 
+    ALTER COLUMN exchange_rates 
+    SET DATA TYPE JSONB 
+    USING exchange_rates::JSONB;
+    SELECT DISTINCT ON (last_updated) last_updated, volume_24h, volume_change_24h, exchange_rates->>'{fiat}' AS {fiat}_rate
+    FROM {POSTGRES_TABLE_COIN_DATA} 
+    WHERE symbol ='{crypto}'
+    ORDER BY last_updated; """
+
+    df_volume = read_from_db(query_volume)
+    
+    if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
+        df_volume["volume_24h"] = df_volume["volume_24h"] * df_volume[f"{fiat.lower()}_rate"].astype(float)
+         
+    print(df_volume)
+    return df_volume
 
 def layout():
        
@@ -68,7 +86,7 @@ def layout():
     with col2:
         selected_currency = st.selectbox(label="Select fiat currency:",options=options_currency)
     
-    # Header for price section  
+    # ------------------------   Header for price section  -------------------
     st.markdown(f"## {selected_crypto}: Latest price in {selected_currency} ")
     
     # Get price data
@@ -83,7 +101,33 @@ def layout():
     fig_price = px.line(df_crypto, x='last_updated', y='price', labels=labels_price)
     st.plotly_chart(fig_price, use_container_width=True)
     
-    # Header for market cap section   
+    # ------------------- Header for volume section   -------------------
+    st.markdown(f"## {selected_crypto}: Volume trends in {selected_currency} ")
+
+    # Get  volume data
+    df_volume = get_volume_data(selected_crypto, selected_currency)
+    
+    # Select type of volume trend
+    options_volume= ["Volume 24h", "Volume Change 24h"]
+    selection_volume = st.segmented_control(
+    "Type of trend", options_volume, selection_mode="single", default=options_volume[0]
+    )
+
+    volume_field = selection_volume.lower().replace(" ","_")
+    print(f"{volume_field=}")
+    # Volume trend Chart
+    labels_volume = {
+        "last_updated" : "Timestamp",
+        "volume_24h" : selected_currency,
+        "volume_change_24h" : "%",
+       }
+
+    fig_volume = px.line(df_volume, x='last_updated', y=volume_field, labels=labels_volume)
+    
+   
+    st.plotly_chart(fig_volume, use_container_width=True)
+
+    # ------------------- Header for market cap section   -------------------
     st.markdown(f"## {selected_crypto}: Market cap trends in {selected_currency} ")
 
     # Get marketcap data
@@ -109,7 +153,6 @@ def layout():
     st.plotly_chart(fig_mcap, use_container_width=True)
 
 
-    
 
 if __name__ == "__main__":
     layout()
