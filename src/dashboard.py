@@ -91,10 +91,19 @@ def layout():
 
     mcap_field = selection_mcap.lower().replace(" ","_")
     # Market Cap trend Chart
-    # st.subheader("Price Trend")
-    fig_mcap = px.line(df_mcap, x='last_updated', y=mcap_field)
+    labels_mcap = {
+        "last_updated" : "Timestamp",
+        "market_cap" : selected_currency,
+        "market_cap_dominance" : "%",
+        "fully_diluted_market_cap" : selected_currency,
+    }
+
+    fig_mcap = px.line(df_mcap, x='last_updated', y=mcap_field, labels=labels_mcap)
    
     st.plotly_chart(fig_mcap, use_container_width=True)
+
+
+    
 
 if __name__ == "__main__":
     layout()
