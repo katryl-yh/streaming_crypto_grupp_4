@@ -12,6 +12,7 @@ from constants import (
 options_currency = [EXCHANGE_RATES_BASE] + EXCHANGE_RATE_SYMBOLS.split(',') 
 options_crypto = COINMARKETCAP_SYMBOLS.split(',')
 st.set_page_config(page_title="Crypto Dashboard", layout="wide")
+
 # Auto-refresh every 20 seconds
 count = st_autorefresh(interval=20 * 1000, limit=100, key="data_refresh")
 
@@ -32,7 +33,6 @@ def get_price_data(crypto, fiat):
     if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
         df_crypto["price"] = df_crypto["price"] * df_crypto[f"{fiat.lower()}_rate"].astype(float)
     
-    
     return df_crypto
 
 def get_market_cap_data(crypto,fiat):
@@ -52,6 +52,7 @@ def get_market_cap_data(crypto,fiat):
     if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
         df_mcap["market_cap"] = df_mcap["market_cap"] * df_mcap[f"{fiat.lower()}_rate"].astype(float)
         df_mcap["fully_diluted_market_cap"] = df_mcap["fully_diluted_market_cap"] * df_mcap[f"{fiat.lower()}_rate"].astype(float)   
+    
     # print(df_mcap)
     return df_mcap
 
@@ -71,9 +72,32 @@ def get_volume_data(crypto,fiat):
     if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
         df_volume["volume_24h"] = df_volume["volume_24h"] * df_volume[f"{fiat.lower()}_rate"].astype(float)
          
+    #print(df_volume)
+    return df_volume
+
+def get_general_data(crypto):
+    query_volume = f""" 
+    SELECT DISTINCT ON (last_updated) last_updated, cmc_rank, circulating_supply, total_supply
+    FROM {POSTGRES_TABLE_COIN_DATA} 
+    WHERE symbol ='{crypto}'
+    ORDER BY last_updated DESC
+    LIMIT 1; """
+
+    df_volume = read_from_db(query_volume)
+         
     print(df_volume)
     return df_volume
 
+def format_large_numbers(num):
+    if num >= 1e9:  # Billion
+        return f"{num / 1e9:.1f}B"
+    elif num >= 1e6:  # Million
+        return f"{num / 1e6:.1f}M"
+    elif num >= 1e3:  # Thousand
+        return f"{num / 1e3:.1f}K"
+    else:
+        return str(int(num))
+    
 def layout():
        
     #Streamlit 
@@ -86,6 +110,22 @@ def layout():
     with col2:
         selected_currency = st.selectbox(label="Select fiat currency:",options=options_currency)
     
+    # ------------------------   General info section  -------------------
+    st.markdown(f"## {selected_crypto}: General information ")
+
+    # Get general information about cryptocurrency
+    df_gen = get_general_data(selected_crypto)
+    print(type(df_gen["circulating_supply"].iloc[0]))
+
+    gcol1, gcol2, gcol3 = st.columns(3)
+
+    with gcol1:  
+        st.metric("CMC rank", value=df_gen["cmc_rank"],border=True)
+    with gcol2:
+        st.metric("Circulating Supply (#coins)", value=format_large_numbers(df_gen["circulating_supply"].iloc[0]),border=True)
+    with gcol3:
+        st.metric("Total Supply (#coins)", value=format_large_numbers(df_gen["total_supply"].iloc[0]),border=True)
+
     # ------------------------   Header for price section  -------------------
     st.markdown(f"## {selected_crypto}: Latest price in {selected_currency} ")
     
