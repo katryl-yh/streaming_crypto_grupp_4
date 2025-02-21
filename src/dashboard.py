@@ -11,7 +11,7 @@ from constants import (
     )
 options_currency = [EXCHANGE_RATES_BASE] + EXCHANGE_RATE_SYMBOLS.split(',') 
 options_crypto = COINMARKETCAP_SYMBOLS.split(',')
-
+st.set_page_config(page_title="Crypto Dashboard", layout="wide")
 # Auto-refresh every 20 seconds
 count = st_autorefresh(interval=20 * 1000, limit=100, key="data_refresh")
 
@@ -77,7 +77,7 @@ def get_volume_data(crypto,fiat):
 def layout():
        
     #Streamlit 
-    #st.set_page_config(page_title="Crypto Dashboard", layout="wide")
+    
     st.title("📈 Live Cryptocurrency Dashboard")
     col1, col2 = st.columns(2)
 
