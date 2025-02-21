@@ -37,6 +37,26 @@ def get_price_data(crypto, fiat):
     
     return df_crypto, conversion_result
 
+def get_market_cap_data(crypto,fiat):
+    query_mcap = f""" 
+    ALTER TABLE crypto_data 
+    ALTER COLUMN exchange_rates 
+    SET DATA TYPE JSONB 
+    USING exchange_rates::JSONB;
+    SELECT DISTINCT ON (last_updated) last_updated, market_cap,  market_cap_dominance, fully_diluted_market_cap, 
+                                                    exchange_rates->>'{fiat}' AS {fiat}_rate 
+    FROM {POSTGRES_TABLE_COIN_DATA} 
+    WHERE symbol ='{crypto}'
+    ORDER BY last_updated; """
+
+    df_mcap = read_from_db(query_mcap)
+    
+    if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
+        df_mcap["market_cap"] = df_mcap["market_cap"] * df_mcap[f"{fiat.lower()}_rate"].astype(float)
+        df_mcap["fully_diluted_market_cap"] = df_mcap["fully_diluted_market_cap"] * df_mcap[f"{fiat.lower()}_rate"].astype(float)   
+    # print(df_mcap)
+    return df_mcap
+
 
 def layout():
        
@@ -60,7 +80,7 @@ def layout():
    
     st.plotly_chart(fig, use_container_width=True)
         
-    st.markdown("## Bitcoin latest price in USD")
+ 
 
 
 if __name__ == "__main__":
