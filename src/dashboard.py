@@ -120,11 +120,14 @@ def layout():
     gcol1, gcol2, gcol3 = st.columns(3)
 
     with gcol1:  
-        st.metric("CMC rank", value=df_gen["cmc_rank"],border=True)
+        st.metric("CMC rank", value=df_gen["cmc_rank"],border=True,
+                  help="The cryptocurrency's ranking based on market cap.")
     with gcol2:
-        st.metric("Circulating Supply (#coins)", value=format_large_numbers(df_gen["circulating_supply"].iloc[0]),border=True)
+        st.metric("Circulating Supply (#coins)", value=format_large_numbers(df_gen["circulating_supply"].iloc[0]),border=True,
+                  help="The number of coins currently available for trading.")
     with gcol3:
-        st.metric("Total Supply (#coins)", value=format_large_numbers(df_gen["total_supply"].iloc[0]),border=True)
+        st.metric("Total Supply (#coins)", value=format_large_numbers(df_gen["total_supply"].iloc[0]),border=True,
+                  help="The total number of coins that exist (if available).")
 
     # ------------------------   Header for price section  -------------------
     st.markdown(f"## {selected_crypto}: Latest price in {selected_currency} ")
@@ -149,9 +152,18 @@ def layout():
     
     # Select type of volume trend
     options_volume= ["Volume 24h", "Volume Change 24h"]
+    explanations = {
+    "Volume 24h": "Total trading volume in the last 24 hours across all exchanges.",
+    "Volume Change 24h": "Percentage change in trading volume over the last 24 hours."
+    }
+
+    # Segmented Control
     selection_volume = st.segmented_control(
-    "Type of trend", options_volume, selection_mode="single", default=options_volume[0]
+    "Type of trend", options_volume, selection_mode="single", default=options_volume[0],
     )
+
+    # Display the explanation dynamically based on selection
+    st.info(explanations[selection_volume])  # Shows the explanation in an info box
 
     volume_field = selection_volume.lower().replace(" ","_")
     print(f"{volume_field=}")
@@ -175,9 +187,17 @@ def layout():
     
     # Select type of marketcap trend
     options_mcap= ["Market Cap", "Market Cap Dominance", "Fully Diluted Market Cap"]
+    explanations_mcap = {
+    "Market Cap": "Total value of a cryptocurrency: Price × Circulating Supply.",
+    "Market Cap Dominance": "Percentage of total crypto market cap that this cryptocurrency represents.",
+    "Fully Diluted Market Cap": "Market cap if all possible coins were in circulation (Max Supply × Price)."
+    }
+    # Segmented Control for Market Cap
     selection_mcap = st.segmented_control(
     "Type of trend", options_mcap, selection_mode="single", default=options_mcap[0]
     )
+    # Display explanation dynamically based on selection
+    st.info(explanations_mcap[selection_mcap])  # Shows explanation in an info box
 
     mcap_field = selection_mcap.lower().replace(" ","_")
     # Market Cap trend Chart
