@@ -76,12 +76,25 @@ def layout():
     df_crypto, conversion_result = get_price_data(selected_crypto, selected_currency)
     # Price Chart
     st.subheader("Price Trend")
-    fig = px.line(df_crypto, x='last_updated', y=conversion_result)
+    fig_price = px.line(df_crypto, x='last_updated', y=conversion_result)
    
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_price, use_container_width=True)
         
- 
+    # Get marketcap data
+    df_mcap = get_market_cap_data(selected_crypto, selected_currency)
+    
+    # Select type of marketcap trend
+    options_mcap= ["Market Cap", "Market Cap Dominance", "Fully Diluted Market Cap"]
+    selection_mcap = st.segmented_control(
+    "Type of trend", options_mcap, selection_mode="single", default=options_mcap[0]
+    )
 
+    mcap_field = selection_mcap.lower().replace(" ","_")
+    # Market Cap trend Chart
+    # st.subheader("Price Trend")
+    fig_mcap = px.line(df_mcap, x='last_updated', y=mcap_field)
+   
+    st.plotly_chart(fig_mcap, use_container_width=True)
 
 if __name__ == "__main__":
     layout()
