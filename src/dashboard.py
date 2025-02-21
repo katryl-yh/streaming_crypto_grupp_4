@@ -75,7 +75,12 @@ def layout():
     df_crypto = get_price_data(selected_crypto, selected_currency)
 
     # Price Chart
-    fig_price = px.line(df_crypto, x='last_updated', y='price')
+    labels_price = {
+        "last_updated" : "Timestamp",
+        "price" : selected_currency,
+    }
+
+    fig_price = px.line(df_crypto, x='last_updated', y='price', labels=labels_price)
     st.plotly_chart(fig_price, use_container_width=True)
     
     # Header for market cap section   
