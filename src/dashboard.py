@@ -21,8 +21,7 @@ def get_price_data(crypto, fiat):
     ALTER COLUMN exchange_rates 
     SET DATA TYPE JSONB 
     USING exchange_rates::JSONB;
-    SELECT DISTINCT ON (last_updated) last_updated, price AS {options_currency[0]}_price, 
-                                                    exchange_rates->>'{fiat}' AS {fiat}_rate 
+    SELECT DISTINCT ON (last_updated) last_updated, price, exchange_rates->>'{fiat}' AS {fiat}_rate 
     FROM {POSTGRES_TABLE_COIN_DATA} 
     WHERE symbol ='{crypto}'
     ORDER BY last_updated, price ; """
@@ -31,11 +30,10 @@ def get_price_data(crypto, fiat):
     print(df_crypto)
 
     if fiat in EXCHANGE_RATE_SYMBOLS.split(','):
-        conversion_result = df_crypto[f"{EXCHANGE_RATES_BASE.lower()}_price"] * df_crypto[f"{fiat.lower()}_rate"].astype(float)
-    else:
-        conversion_result = df_crypto[f"{EXCHANGE_RATES_BASE.lower()}_price"]
+        df_crypto["price"] = df_crypto["price"] * df_crypto[f"{fiat.lower()}_rate"].astype(float)
     
-    return df_crypto, conversion_result
+    
+    return df_crypto
 
 def get_market_cap_data(crypto,fiat):
     query_mcap = f""" 
@@ -69,17 +67,20 @@ def layout():
         selected_crypto = st.selectbox(label="Select crypto currency:",options=options_crypto)
     with col2:
         selected_currency = st.selectbox(label="Select fiat currency:",options=options_currency)
-        
+    
+    # Header for price section  
     st.markdown(f"## {selected_crypto}: Latest price in {selected_currency} ")
     
     # Get price data
-    df_crypto, conversion_result = get_price_data(selected_crypto, selected_currency)
+    df_crypto = get_price_data(selected_crypto, selected_currency)
+
     # Price Chart
-    st.subheader("Price Trend")
-    fig_price = px.line(df_crypto, x='last_updated', y=conversion_result)
-   
+    fig_price = px.line(df_crypto, x='last_updated', y='price')
     st.plotly_chart(fig_price, use_container_width=True)
-        
+    
+    # Header for market cap section   
+    st.markdown(f"## {selected_crypto}: Market cap trends in {selected_currency} ")
+
     # Get marketcap data
     df_mcap = get_market_cap_data(selected_crypto, selected_currency)
     
