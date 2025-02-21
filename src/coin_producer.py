@@ -1,4 +1,3 @@
-import json
 import time
 
 from connect_api import get_data
@@ -7,10 +6,9 @@ from constants import (
     KAFKA_PORT,
     KAFKA_CONSUMER_GROUP,
     KAFKA_TOPIC,
+    UPDATE_FREQ_SEC,
 )
 from quixstreams import Application
-
-UPDATE_FREQ_SEC = 10
 
 
 app = Application(
